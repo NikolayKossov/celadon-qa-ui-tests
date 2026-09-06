@@ -1,0 +1,49 @@
+name: Docker UI tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ui-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare output directory
+        run: |
+          mkdir -p build
+          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
+          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
+      - name: Run tests in Docker
+        run: docker compose up --build --abort-on-container-exit --exit-code-from tests
+      - name: Collect container logs
+        if: always()
+        run: docker compose logs --no-color > build/docker-compose.log 2>&1
+      - name: Save Allure and test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results-${{ github.run_number }}
+          path: |
+            build/reports/
+            build/allure-results/
+            build/test-results/
+            build/docker-compose.log
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Stop containers
+        if: always()
+        run: docker compose down --remove-orphans

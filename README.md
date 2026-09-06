@@ -1,5 +1,20 @@
 # Celadon Junior QA — UI automation portfolio
 
+[![Docker UI tests](https://github.com/NikolayKossov/celadon-qa-ui-tests/actions/workflows/ui-tests.yml/badge.svg)](https://github.com/NikolayKossov/celadon-qa-ui-tests/actions/workflows/ui-tests.yml)
+
+## GitHub Actions — основной CI
+
+Сервер не нужен: GitHub запускает Docker Compose на Ubuntu при push в `main`,
+pull request в `main` и вручную через **Actions → Docker UI tests → Run workflow**.
+Workflow собирает контейнер тестов, ждёт готовности Chrome и запускает 11 проверок.
+При ошибке тестов запуск становится красным; отчёты и логи сохраняются также при ошибке.
+
+Откройте завершённый запуск во вкладке Actions → **Artifacts** → скачайте
+`ui-test-results-<номер>`. Архив содержит Allure HTML, сырые результаты,
+JUnit XML и логи контейнеров. Срок хранения — 14 дней. HTML Allure нужно
+открывать через локальный HTTP-сервер; автоматическая публикация на Pages не включена.
+Jenkinsfile остаётся дополнительным вариантом запуска, для Actions он не требуется.
+
 Проект автоматизации на Java, Selenide, JUnit 5 и Allure для вакансии,
 размещённой в Google Apps Script.
 
