@@ -12,6 +12,9 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'com.codeborne:selenide:7.9.4'
     testImplementation 'io.qameta.allure:allure-selenide:2.29.1'
+    testImplementation 'io.rest-assured:rest-assured:5.5.6'
+    testImplementation 'io.qameta.allure:allure-rest-assured:2.29.1'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.18.3'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -35,4 +38,10 @@ tasks.register('celadon_test', Test) {
     description = 'Run the Celadon Junior QA portfolio suite'
     group = 'verification'
     useJUnitPlatform { includeTags 'celadon' }
+}
+
+tasks.register('api_test', Test) {
+    description = 'Run REST Assured tests against the local educational API'
+    group = 'verification'
+    useJUnitPlatform { includeTags 'api' }
 }

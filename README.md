@@ -1,12 +1,12 @@
 <div align="center">
 
-# Celadon · UI Test Automation
+# Celadon · UI & API Test Automation
 
 ### From browser checks to a Docker-based CI pipeline
 
-A Java QA portfolio project for the **Celadon Junior QA vacancy page**.
+A Java QA portfolio: **Celadon vacancy UI checks** and an **independent educational REST API suite**.
 
-[![Docker UI tests](https://github.com/NikolayKossov/celadon-qa-ui-tests/actions/workflows/ui-tests.yml/badge.svg)](https://github.com/NikolayKossov/celadon-qa-ui-tests/actions/workflows/ui-tests.yml)
+[![Docker UI and API tests](https://github.com/NikolayKossov/celadon-qa-ui-tests/actions/workflows/ui-tests.yml/badge.svg)](https://github.com/NikolayKossov/celadon-qa-ui-tests/actions/workflows/ui-tests.yml)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square)
 ![Selenide](https://img.shields.io/badge/Selenide-7.9.4-43B02A?style=flat-square)
 ![JUnit](https://img.shields.io/badge/JUnit-5-25A162?style=flat-square)
@@ -23,7 +23,7 @@ A Java QA portfolio project for the **Celadon Junior QA vacancy page**.
 
 This project checks the information a candidate needs before applying: the role, requirements, benefits and contact links. It demonstrates how a small UI test suite can be structured, run in containers and connected to continuous integration.
 
-**11 test cases · Page Object pattern · Two nested iframes · Allure evidence**
+**11 UI cases + 10 API cases · Page Object · REST Assured · Docker CI · Allure evidence**
 
 The application is hosted in Google Apps Script. Tests enter both iframe layers before interacting with the vacancy page, using Selenide's built-in waits instead of fixed delays.
 
@@ -45,6 +45,7 @@ The application is hosted in Google Apps Script. Tests enter both iframe layers 
 | --- | --- |
 | **Java 21** | Test implementation and container runtime |
 | **Selenide / Selenium WebDriver** | Browser automation, element assertions and automatic waits |
+| **REST Assured** | HTTP requests, JSON assertions and API lifecycle testing |
 | **JUnit 5** | Test lifecycle, parameterized cases and assertions |
 | **Gradle Wrapper** | Repeatable build and dependency management |
 | **Allure Report** | Test steps, screenshots and page-source attachments |
@@ -66,6 +67,35 @@ Each test starts with a fresh browser session. Screenshots and application-frame
 
 ## 🔄 Automation architecture
 
+### REST API coverage — 10 cases
+
+The API suite targets an **in-repository educational Tasks service**, not a Celadon
+endpoint or a public production API. It uses real HTTP requests over loopback,
+with an in-memory store and a fresh server on a random port for every test.
+No external account, credentials or manually started service is needed.
+
+| Scenario | Expected behavior | Cases |
+| --- | --- | :---: |
+| Empty collection | GET returns `200` and a JSON array | 1 |
+| Resource lifecycle | POST `201`, Location header, GET, PUT with persisted changes, DELETE `204`, then GET `404` | 1 |
+| Invalid fields | Missing/blank/non-string title or non-boolean completed → `400`; no resource created | 4 |
+| Malformed JSON | `400` and JSON error message | 1 |
+| Unsupported Content-Type | `415` | 1 |
+| Unknown task | `404` | 1 |
+| Unsupported method | `405` and Allow header | 1 |
+
+Run API tests without Chrome:
+
+```powershell
+.\gradlew.bat api_test --rerun-tasks
+```
+
+REST Assured requests and responses are attached to Allure. The existing Docker
+entrypoint runs `test`, so GitHub Actions and the optional Jenkins pipeline run
+both suites automatically. This fixture demonstrates HTTP test design and
+isolation; it does not establish coverage of a third-party backend, authentication,
+database persistence or production integrations.
+
 ```mermaid
 flowchart LR
     A[Push / pull request / manual run] --> B[GitHub Actions · Ubuntu]
@@ -75,6 +105,7 @@ flowchart LR
     D -->|Remote WebDriver| E
     E --> F[Google Apps Script vacancy]
     D --> G[Allure + JUnit results]
+    D -->|REST Assured HTTP| I[Isolated educational Tasks API]
     G --> H[Downloadable CI artifacts]
 ```
 
@@ -86,7 +117,7 @@ Compose waits for Chrome's health check before starting the suite. The test cont
 
 The workflow runs on pushes to `main`, pull requests targeting `main`, and manual requests.
 
-**To launch a demo:** open **Actions → Docker UI tests → Run workflow → main**.
+**To launch a demo:** open **Actions → Docker UI and API tests → Run workflow → main**.
 
 The job checks out the repository, builds the Docker image, runs the tests and uploads results. The badge at the top reflects the workflow status; open an individual run for its actual outcome.
 
@@ -139,7 +170,7 @@ sh gradlew test allureReport -Dheadless=true --rerun-tasks
 | `celadon.url` | Defaults to the vacancy URL linked above |
 | `browser_version` | Optional remote browser version |
 
-`test` and `celadon_test` both run this suite. Use `--rerun-tasks` to force a fresh execution.
+`test` runs both UI and API suites; `celadon_test` runs UI only; `api_test` runs API only. Use `--rerun-tasks` to force a fresh execution.
 
 ## 🐳 Run with Docker
 
@@ -181,6 +212,8 @@ src/test/java/
 └── tests/celadon/
     ├── CeladonTestBase.java         Configuration, evidence and cleanup
     └── CeladonVacancyTest.java      Test scenarios and link parameters
+src/test/java/tests/api/TasksApiTest.java  REST Assured suite
+src/test/java/support/PracticeApi.java     Educational HTTP service
 Dockerfile                          Java test-runner image
 compose.yaml                        Test runner + Selenium Chrome
 docker/run-tests.sh                 Test execution and report generation
@@ -203,7 +236,7 @@ This is a focused UI automation portfolio, built around a static vacancy page. L
 
 The local baseline passed **11/11 tests** on 6 September 2026 with JDK 21 and Chrome 153. Consult GitHub Actions for CI results. A narrow viewport can be configured, but a dedicated mobile suite has not been validated.
 
-Potential extensions include publishing Allure to GitHub Pages and adding accessibility checks. Form validation and API testing would require a suitable application with those features.
+Potential extensions include publishing Allure to GitHub Pages, JSON Schema validation and accessibility checks.
 
 ---
 
