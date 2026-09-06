@@ -1,0 +1,38 @@
+plugins {
+    id 'java-library'
+    id 'io.qameta.allure' version '2.11.2'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'com.codeborne:selenide:7.9.4'
+    testImplementation 'io.qameta.allure:allure-selenide:2.29.1'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    systemProperties(System.getProperties())
+    testLogging {
+        showStandardStreams = true
+        events "passed", "skipped", "failed"
+    }
+}
+
+allure {
+    version = '2.21.0'
+}
+
+tasks.register('celadon_test', Test) {
+    description = 'Run the Celadon Junior QA portfolio suite'
+    group = 'verification'
+    useJUnitPlatform { includeTags 'celadon' }
+}

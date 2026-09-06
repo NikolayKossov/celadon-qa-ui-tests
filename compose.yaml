@@ -1,0 +1,20 @@
+services:
+  chrome:
+    image: selenium/standalone-chrome:4.34.0-20250707
+    shm_size: 2gb
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4444/wd/hub/status | grep -q '\"ready\": true'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+  tests:
+    build: .
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    environment:
+      BROWSER_SIZE: "${BROWSER_SIZE:-1440x1000}"
+    depends_on:
+      chrome:
+        condition: service_healthy
+    volumes:
+      - ./build:/app/build
